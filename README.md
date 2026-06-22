@@ -1,4 +1,4 @@
-# Product Browser — Full Stack Guide
+# Product Browser 
 
 A cursor-paginated product catalogue with 200k records, FastAPI + PostgreSQL + vanilla JS.
 
@@ -169,6 +169,3 @@ in a single scan — no separate sort or filter step needed.
 | Neon | 0.5 GB storage, 1 project |
 | Render Web Service | Spins down after 15 min inactivity, 512MB RAM |
 | Render Static Site | Unlimited |
-
-> **Note**: On Render's free tier, the first request after inactivity takes ~30s (cold start).
-> Upgrade to Starter ($7/mo) to keep it always on.
