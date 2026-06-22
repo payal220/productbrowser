@@ -1,0 +1,24 @@
+# render.yaml — Render deployment configuration
+# Deploy this file at the ROOT of your repository.
+# Render reads it automatically when you connect the repo.
+#
+# WHAT THIS DOES:
+#   - Deploys your FastAPI app as a Web Service on Render
+#   - Render provides a free HTTPS URL automatically
+#   - Set DATABASE_URL in Render's "Environment" tab (from Neon dashboard)
+
+services:
+  - type: web
+    name: product-browser-api
+    runtime: python
+    region: oregon                    # Choose closest to your users
+    plan: free                        # Free tier: 512MB RAM, spins down after inactivity
+    rootDir: backend                  # Render runs commands from this subdirectory
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    #                                  ^^^^^^^^^^^ required for Render (it sets $PORT)
+    envVars:
+      - key: DATABASE_URL
+        sync: false                   # "sync: false" means you enter it manually in the dashboard
+                                      # Paste your Neon connection string here:
+                                      # postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/products?sslmode=require

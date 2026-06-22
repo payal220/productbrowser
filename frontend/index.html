@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Browser</title>
+  <style>
+    /* ============================================================
+       DESIGN: Clean data-dense catalogue UI
+       Palette: Near-white background, slate text, indigo accent
+       Signature: Sticky header with live count + category pills
+       ============================================================ */
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #f8f9fc;
+      --surface:    #ffffff;
+      --border:     #e2e6f0;
+      --text:       #1a1f36;
+      --text-muted: #6b7280;
+      --accent:     #4f46e5;     /* indigo */
+      --accent-light: #eef2ff;
+      --green:      #10b981;
+      --radius:     10px;
+      --shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+      padding: 0 24px;
+    }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; gap: 20px;
+      height: 60px;
+    }
+    .logo {
+      font-weight: 700; font-size: 1.1rem; letter-spacing: -.02em;
+      color: var(--accent); white-space: nowrap;
+    }
+    .logo span { color: var(--text); }
+
+    /* Category filter pills */
+    .filters {
+      display: flex; gap: 8px; flex-wrap: wrap; flex: 1;
+    }
+    .pill {
+      padding: 4px 12px; border-radius: 20px; font-size: .8rem;
+      font-weight: 500; cursor: pointer; border: 1.5px solid var(--border);
+      background: var(--surface); color: var(--text-muted);
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+    .pill.active {
+      background: var(--accent-light); border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Live stats badge */
+    .stats {
+      font-size: .8rem; color: var(--text-muted);
+      white-space: nowrap; margin-left: auto;
+    }
+    .stats strong { color: var(--text); }
+
+    /* ---- Main layout ---- */
+    .main {
+      max-width: 1200px; margin: 0 auto; padding: 28px 24px;
+    }
+
+    /* ---- Product grid ---- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: box-shadow .15s, transform .15s;
+    }
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(79,70,229,.12);
+      transform: translateY(-1px);
+    }
+
+    .card-top {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+    }
+    .card-name {
+      font-size: .95rem; font-weight: 600; line-height: 1.3;
+      color: var(--text);
+    }
+    .card-price {
+      font-size: 1.05rem; font-weight: 700; color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .card-category {
+      display: inline-block;
+      padding: 2px 8px; border-radius: 4px;
+      font-size: .72rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .05em;
+      background: var(--accent-light); color: var(--accent);
+    }
+
+    .card-meta {
+      font-size: .73rem; color: var(--text-muted);
+      border-top: 1px solid var(--border); padding-top: 10px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+
+    /* ---- Load more button ---- */
+    .load-more-wrap {
+      margin-top: 32px; display: flex;
+      flex-direction: column; align-items: center; gap: 8px;
+    }
+    .btn-load {
+      padding: 11px 32px; border-radius: 8px; font-size: .9rem;
+      font-weight: 600; cursor: pointer; border: none;
+      background: var(--accent); color: #fff;
+      transition: background .15s, opacity .15s;
+    }
+    .btn-load:hover { background: #4338ca; }
+    .btn-load:disabled { opacity: .5; cursor: not-allowed; }
+
+    .page-info {
+      font-size: .8rem; color: var(--text-muted);
+    }
+
+    /* ---- States ---- */
+    .empty {
+      text-align: center; padding: 64px 24px;
+      color: var(--text-muted);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 6px; }
+
+    .spinner {
+      display: flex; justify-content: center; padding: 40px;
+    }
+    .spinner-ring {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .cursor-explainer {
+      background: var(--accent-light); border: 1px solid var(--accent);
+      border-radius: var(--radius); padding: 14px 18px;
+      margin-bottom: 24px; font-size: .82rem; color: var(--accent);
+      line-height: 1.5;
+    }
+    .cursor-explainer strong { font-weight: 700; }
+
+    .error-banner {
+      background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: var(--radius); padding: 12px 16px;
+      margin-bottom: 20px; color: #dc2626; font-size: .85rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     CONFIGURATION — change this to your Render backend URL
+     ============================================================ -->
+<script>
+  // When running locally: http://localhost:8000
+  // After deploying to Render: https://product-browser-api.onrender.com
+  const API_BASE = "http://localhost:8000";
+</script>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">product<span>browser</span></div>
+
+    <!-- Category pills injected here by JS -->
+    <div class="filters" id="filters">
+      <button class="pill active" data-category="">All</button>
+    </div>
+
+    <div class="stats" id="stats">Loading…</div>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- Explains cursor pagination to the user -->
+  <div class="cursor-explainer">
+    <strong>Stable pagination:</strong> This UI uses <em>cursor-based pagination</em>.
+    Even if products are added or updated while you browse, you'll never see a duplicate
+    or miss an item — the cursor anchors your exact position in the sorted list.
+  </div>
+
+  <div id="error-area"></div>
+
+  <!-- Product cards injected here -->
+  <div class="grid" id="grid"></div>
+
+  <!-- Spinner shown while loading -->
+  <div class="spinner" id="spinner" style="display:none">
+    <div class="spinner-ring"></div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty" id="empty" style="display:none">
+    <div class="empty-icon">📦</div>
+    <h3>No products found</h3>
+    <p>Try a different category filter.</p>
+  </div>
+
+  <!-- Load more + page info -->
+  <div class="load-more-wrap" id="load-more-wrap" style="display:none">
+    <button class="btn-load" id="btn-load" onclick="loadMore()">Load more</button>
+    <span class="page-info" id="page-info"></span>
+  </div>
+</main>
+
+<script>
+// =================================================================
+// STATE
+// =================================================================
+let cursor      = null;     // current pagination cursor (null = first page)
+let category    = "";       // active category filter ("" = all)
+let totalShown  = 0;        // running count of products shown
+let loading     = false;    // guard against concurrent fetches
+const LIMIT     = 24;       // products per page
+
+// =================================================================
+// INIT — load categories then first page
+// =================================================================
+async function init() {
+  await loadCategories();
+  await loadPage(true);  // true = reset/first page
+}
+
+// =================================================================
+// LOAD CATEGORIES — populate the filter pills
+// =================================================================
+async function loadCategories() {
+  try {
+    const res = await fetch(`${API_BASE}/categories`);
+    const data = await res.json();
+
+    const filtersEl = document.getElementById("filters");
+
+    data.categories.forEach(cat => {
+      const btn = document.createElement("button");
+      btn.className = "pill";
+      btn.dataset.category = cat;
+      btn.textContent = cat;
+      btn.onclick = () => setCategory(cat);
+      filtersEl.appendChild(btn);
+    });
+  } catch (e) {
+    showError("Could not load categories. Is the API running?");
+  }
+}
+
+// =================================================================
+// SET CATEGORY FILTER
+// =================================================================
+function setCategory(cat) {
+  // Update active pill styling
+  document.querySelectorAll(".pill").forEach(p => {
+    p.classList.toggle("active", p.dataset.category === cat);
+  });
+
+  category   = cat;
+  cursor     = null;      // reset cursor — we're starting a new filtered list
+  totalShown = 0;
+  document.getElementById("grid").innerHTML = "";
+  loadPage(true);
+}
+
+// =================================================================
+// LOAD PAGE — fetch one page from the API
+// =================================================================
+async function loadPage(isFirst = false) {
+  if (loading) return;
+  loading = true;
+
+  // Show/hide UI elements
+  setSpinner(true);
+  hideError();
+
+  // Build URL with cursor and optional category
+  // The cursor is an opaque token — we pass it straight back to the API
+  const params = new URLSearchParams({ limit: LIMIT });
+  if (cursor)   params.set("cursor", cursor);
+  if (category) params.set("category", category);
+
+  try {
+    const res  = await fetch(`${API_BASE}/products?${params}`);
+    const data = await res.json();
+
+    if (data.error) {
+      showError(data.error);
+      return;
+    }
+
+    // Append product cards
+    renderCards(data.products);
+
+    // Update cursor for next page
+    cursor      = data.next_cursor;  // null if last page
+    totalShown += data.products.length;
+
+    updateStats();
+    updateLoadMore(data.has_more);
+
+    if (isFirst && data.products.length === 0) {
+      document.getElementById("empty").style.display = "block";
+    } else {
+      document.getElementById("empty").style.display = "none";
+    }
+
+  } catch (e) {
+    showError("Network error — make sure the API is running at " + API_BASE);
+  } finally {
+    loading = false;
+    setSpinner(false);
+  }
+}
+
+function loadMore() { loadPage(false); }
+
+// =================================================================
+// RENDER PRODUCT CARDS
+// =================================================================
+function renderCards(products) {
+  const grid = document.getElementById("grid");
+  products.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-name">${escHtml(p.name)}</div>
+        <div class="card-price">$${p.price.toFixed(2)}</div>
+      </div>
+      <span class="card-category">${escHtml(p.category)}</span>
+      <div class="card-meta">
+        <span>ID: ${p.id}</span>
+        <span>Updated: ${formatDate(p.updated_at)}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// =================================================================
+// UI HELPERS
+// =================================================================
+function updateStats() {
+  document.getElementById("stats").innerHTML =
+    `Showing <strong>${totalShown.toLocaleString()}</strong> products`;
+}
+
+function updateLoadMore(hasMore) {
+  const wrap = document.getElementById("load-more-wrap");
+  const btn  = document.getElementById("btn-load");
+  const info = document.getElementById("page-info");
+  wrap.style.display = hasMore ? "flex" : "none";
+  btn.disabled = false;
+  info.textContent = hasMore
+    ? `Loaded ${totalShown.toLocaleString()} products — more available`
+    : "";
+}
+
+function setSpinner(show) {
+  document.getElementById("spinner").style.display = show ? "flex" : "none";
+}
+
+function showError(msg) {
+  document.getElementById("error-area").innerHTML =
+    `<div class="error-banner">⚠️ ${escHtml(msg)}</div>`;
+}
+function hideError() {
+  document.getElementById("error-area").innerHTML = "";
+}
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString("en-IN", {
+    day: "numeric", month: "short", year: "numeric"
+  });
+}
+
+function escHtml(str) {
+  // Prevent XSS when rendering product names from the API
+  return String(str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// =================================================================
+// START
+// =================================================================
+init();
+</script>
+</body>
+</html>
