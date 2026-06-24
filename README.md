@@ -171,7 +171,9 @@ in a single scan — no separate sort or filter step needed.
 | Render Static Site | Unlimited |
 
 
-##Required Link
+## Required Link
 Live Frontend---------https://productbrowser-frontend.onrender.comLive 
+
 API Docs---------------https://productbrowser-hr1d.onrender.com/docs
+
 GitHub Repo------------https://github.com/payal220/productbrowser
