@@ -172,7 +172,7 @@ in a single scan — no separate sort or filter step needed.
 
 
 ## Required Link
-Live Frontend---------https://productbrowser-frontend.onrender.comLive 
+Live Frontend---------https://productbrowser-frontend.onrender.com
 
 API Docs---------------https://productbrowser-hr1d.onrender.com/docs
 
