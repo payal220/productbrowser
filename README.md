@@ -169,3 +169,9 @@ in a single scan — no separate sort or filter step needed.
 | Neon | 0.5 GB storage, 1 project |
 | Render Web Service | Spins down after 15 min inactivity, 512MB RAM |
 | Render Static Site | Unlimited |
+
+
+##Required Link
+Live Frontend---------https://productbrowser-frontend.onrender.comLive 
+API Docs---------------https://productbrowser-hr1d.onrender.com/docs
+GitHub Repo------------https://github.com/payal220/productbrowser
